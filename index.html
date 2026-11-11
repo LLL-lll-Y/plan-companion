@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<title>计划陪伴 · 专注与任务</title>
+<meta name="description" content="有人陪着的专注计时与任务管理。数据只存在本机，离线可用。">
+<meta name="theme-color" content="#f4f1e9" id="themeColorMeta">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="计划陪伴">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<link rel="stylesheet" href="./styles.css">
+<link rel="stylesheet" href="./scene.css">
+<link rel="stylesheet" href="./views.css">
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="12.5" fill="none" stroke="currentColor" stroke-width="2" opacity=".55"/><path d="M16 8.5c5 2.7 7 6 7 8.8-3.7 2.8-7 1.6-7 6.2 0-4.6-3.3-3.4-7-6.2 0-2.8 2-6.1 7-8.8z" fill="currentColor" opacity=".85"/></svg>
+      </span>
+      <span class="brand-copy">
+        <strong>计划陪伴</strong>
+        <small>有人陪着的专注</small>
+      </span>
+    </div>
+
+    <nav class="nav" id="nav" aria-label="主导航">
+      <button class="nav-btn is-active" data-view="focus" aria-current="page">
+        <span class="nav-icon" aria-hidden="true">🕯️</span><span class="nav-text">陪伴</span>
+      </button>
+      <button class="nav-btn" data-view="tasks">
+        <span class="nav-icon" aria-hidden="true">🌱</span><span class="nav-text">任务</span>
+      </button>
+      <button class="nav-btn" data-view="stats">
+        <span class="nav-icon" aria-hidden="true">📊</span><span class="nav-text">统计</span>
+      </button>
+      <button class="nav-btn" data-view="records">
+        <span class="nav-icon" aria-hidden="true">📖</span><span class="nav-text">记录</span>
+      </button>
+      <button class="nav-btn" data-view="settings">
+        <span class="nav-icon" aria-hidden="true">⚙️</span><span class="nav-text">设置</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-foot">
+      <p class="sidebar-quote">把今天，过成自己的节奏。</p>
+      <span class="sidebar-version">本地数据 · 无需登录</span>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- ================= 陪伴 ================= -->
+    <section class="view is-active" id="view-focus" aria-label="陪伴与专注">
+      <header class="view-head">
+        <div>
+          <h1 class="view-title">陪着你，慢慢来</h1>
+          <p class="view-sub" id="focusDateLine">按自己的节奏来</p>
+        </div>
+        <button class="today-pill" id="todayPill" type="button" title="查看今天的统计">今日 0 个番茄</button>
+      </header>
+
+      <div class="focus-grid">
+        <div class="stage-col">
+          <div class="stage" id="stage" data-mood="idle">
+            <div class="stage-viewport" id="stageViewport">
+              <div class="stage-canvas" id="stageCanvas">
+                <div class="media-scene">
+                  <div class="media-blur" id="stageBlur" aria-hidden="true"></div>
+                  <div class="media-frame" id="character" role="button" tabindex="0" aria-label="和黎深说句话">
+                    <img class="media-img" id="stageImage" src="./assets/li-shen-window.jpg" alt="黎深 · 窗边读书" draggable="false" decoding="async">
+                    <video class="media-video" id="stageVideo" muted loop playsinline webkit-playsinline preload="metadata" poster="./assets/poster-video-wine-1.jpg" aria-hidden="true" hidden></video>
+                    <div class="media-glow" aria-hidden="true"></div>
+                  </div>
+                  <button class="media-play" id="stagePlayBtn" type="button" hidden>轻触播放</button>
+                  <div class="media-light" aria-hidden="true"></div>
+                  <div class="media-vignette" aria-hidden="true"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="stage-overlay" aria-hidden="true"></div>
+
+            <div class="stage-top">
+              <span class="stage-chip" id="moodChip">安静陪伴</span>
+              <span class="stage-chip subtle" id="zoomHint">滚轮 / 双指缩放 · 拖拽平移</span>
+            </div>
+
+            <div class="stage-caption" id="stageCaption">今日陪伴 · 专注 0 分钟</div>
+
+            <div class="zoom-controls">
+              <button id="zoomIn" type="button" aria-label="放大场景">＋</button>
+              <button id="zoomOut" type="button" aria-label="缩小场景">－</button>
+              <button id="zoomReset" type="button" aria-label="恢复默认视角">⟲</button>
+            </div>
+
+            <div class="stage-bubble" id="stageBubble" hidden></div>
+          </div>
+
+          <div class="stage-foot">
+            <p class="stage-line" id="stageLine">我在这儿，你先挑一件想做的事。</p>
+            <div class="stage-actions">
+              <button class="music-btn" id="musicToggle" type="button" aria-label="背景音乐" aria-pressed="true" title="背景音乐">
+                <svg viewBox="0 0 20 20" aria-hidden="true">
+                  <path class="spk" d="M4.2 8h2.9L11 5.2v9.6L7.1 12H4.2z"/>
+                  <path class="wave" d="M13.4 7.4c1.1 1.1 1.1 4.1 0 5.2M15.6 5.4c2.1 2.1 2.1 7.1 0 9.2"/>
+                  <path class="slash" d="M3.6 3.6l12.8 12.8"/>
+                </svg>
+              </button>
+              <button class="text-btn" id="charTalkBtn" type="button">和他说句话</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="timer-col">
+          <section class="panel timer-panel" id="timerPanel" data-phase="focus" data-mode="down" aria-label="专注计时">
+            <div class="panel-head timer-head">
+              <h2>专注钟</h2>
+              <span class="strict-badge" id="strictBadge" hidden>严格模式</span>
+            </div>
+
+            <div class="phase-switch" role="tablist" aria-label="阶段">
+              <button class="phase-btn is-active" data-phase="focus" role="tab" aria-selected="true">专注</button>
+              <button class="phase-btn" data-phase="short" role="tab" aria-selected="false">短休息</button>
+              <button class="phase-btn" data-phase="long" role="tab" aria-selected="false">长休息</button>
+            </div>
+
+            <div class="ring-wrap">
+              <svg class="ring" viewBox="0 0 240 240" aria-hidden="true">
+                <circle class="ring-track" cx="120" cy="120" r="104"/>
+                <circle class="ring-progress" id="ringProgress" cx="120" cy="120" r="104"/>
+              </svg>
+              <div class="ring-center">
+                <div class="timer-time" id="timerTime">25:00</div>
+                <div class="timer-labels">
+                  <span id="timerPhaseLabel">专注时间</span>
+                  <span class="dot-sep" aria-hidden="true">·</span>
+                  <span id="timerModeLabel">倒计时</span>
+                </div>
+                <span class="timer-goal" id="timerGoal" hidden>目标 25:00</span>
+              </div>
+            </div>
+
+            <div class="cycle-row">
+              <span class="dots" id="cycleDots" aria-hidden="true"></span>
+              <span class="cycle-text" id="cycleText">本轮 0/4</span>
+            </div>
+
+            <button class="task-chip" id="taskChip" type="button">
+              <span class="chip-empty">还没有选择任务</span><span class="chip-link">点这里挑一个</span>
+            </button>
+
+            <div class="timer-actions">
+              <button class="btn primary" id="btnPrimary" type="button">开始专注</button>
+              <button class="btn ghost icon" id="btnReset" type="button" title="重置本阶段" aria-label="重置本阶段">↺</button>
+              <button class="btn ghost icon" id="btnSkip" type="button" title="跳过本阶段" aria-label="跳过本阶段">⏭</button>
+            </div>
+
+            <p class="timer-hint" id="timerHint">空格键开始 / 暂停 · Esc 关闭弹窗</p>
+
+            <details class="drawer" id="durationDrawer">
+              <summary><span><span id="durationLabel">专注时长</span> <b id="durationSummary">25 分钟</b></span><span class="chev" aria-hidden="true">⌄</span></summary>
+              <div class="drawer-body">
+                <div class="preset-row" id="presetRow">
+                  <button class="preset" type="button" data-min="10">10</button>
+                  <button class="preset" type="button" data-min="15">15</button>
+                  <button class="preset" type="button" data-min="20">20</button>
+                  <button class="preset is-active" type="button" data-min="25">25</button>
+                  <button class="preset" type="button" data-min="30">30</button>
+                  <button class="preset" type="button" data-min="45">45</button>
+                  <button class="preset" type="button" data-min="60">60</button>
+                </div>
+                <div class="range-row">
+                  <input type="range" id="durationRange" min="1" max="180" step="1" value="25" aria-label="专注时长（分钟）">
+                  <output id="durationRangeOut">25 分钟</output>
+                </div>
+                <div class="mode-row">
+                  <span class="mode-label">计时方式</span>
+                  <div class="segmented" id="modeSwitch">
+                    <button type="button" data-mode="down" class="is-active">倒计时</button>
+                    <button type="button" data-mode="up">正计时</button>
+                  </div>
+                </div>
+                <p class="hint" id="durationHint">改动会立即显示在表盘上，并从下一次开始生效。</p>
+              </div>
+            </details>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 任务 ================= -->
+    <section class="view" id="view-tasks" aria-label="任务">
+      <header class="view-head">
+        <div>
+          <h1 class="view-title">今天要做的事</h1>
+          <p class="view-sub">点一下任务，就把下一段专注交给它</p>
+        </div>
+        <button class="btn primary" id="addTaskBtn" type="button">＋ 新建任务</button>
+      </header>
+
+      <div class="panel tasks-panel">
+        <div class="tasks-toolbar">
+          <div class="segmented" id="taskFilter">
+            <button type="button" data-filter="all" class="is-active">全部 <span id="countAll">0</span></button>
+            <button type="button" data-filter="important">重要 <span id="countImportant">0</span></button>
+            <button type="button" data-filter="open">未完成 <span id="countOpen">0</span></button>
+          </div>
+        </div>
+        <div class="task-list" id="taskList"></div>
+      </div>
+
+      <div class="panel manager-panel">
+        <details class="manager-block" open>
+          <summary>
+            <span>分类管理</span>
+            <span class="summary-actions"><button class="text-btn" id="addCategoryBtn" type="button">＋ 新分类</button></span>
+          </summary>
+          <div class="chip-list" id="categoryManager"></div>
+        </details>
+        <details class="manager-block">
+          <summary>
+            <span>目标管理</span>
+            <span class="summary-actions"><button class="text-btn" id="addGoalBtn" type="button">＋ 新目标</button></span>
+          </summary>
+          <div class="chip-list" id="goalManager"></div>
+          <p class="hint">目标可以关联任务，这里会汇总每个目标下的任务数与番茄数。</p>
+        </details>
+      </div>
+    </section>
+
+    <!-- ================= 统计 ================= -->
+    <section class="view" id="view-stats" aria-label="统计">
+      <header class="view-head stats-head">
+        <div>
+          <h1 class="view-title">专注的样子</h1>
+          <p class="view-sub">不比较，只看看自己走过的痕迹</p>
+        </div>
+        <div class="date-stepper">
+          <button id="statPrev" type="button" aria-label="前一天">‹</button>
+          <span id="statDateLabel">今天</span>
+          <button id="statNext" type="button" aria-label="后一天">›</button>
+          <button class="text-btn" id="statToday" type="button">回到今天</button>
+        </div>
+      </header>
+
+      <div class="stat-grid" id="statGrid"></div>
+
+      <div class="stats-grid">
+        <div class="panel chart-panel">
+          <div class="panel-head">
+            <h2>专注分布</h2>
+            <span class="panel-note" id="pieDateLabel"></span>
+          </div>
+          <div class="pie-wrap">
+            <canvas id="pieChart" aria-label="按分类的专注占比饼图"></canvas>
+            <div class="chart-empty" id="pieEmpty">这一天还没有专注记录</div>
+          </div>
+          <div class="pie-legend" id="pieLegend"></div>
+        </div>
+
+        <div class="panel chart-panel">
+          <div class="panel-head">
+            <h2>近 7 天</h2>
+            <span class="panel-note" id="weekRangeLabel">分钟</span>
+          </div>
+          <div class="bars" id="weekBars"></div>
+        </div>
+      </div>
+
+      <div class="panel calendar-panel">
+        <div class="panel-head">
+          <h2>专注日历</h2>
+          <div class="cal-nav">
+            <button id="calPrev" type="button" aria-label="上个月">‹</button>
+            <span id="calLabel"></span>
+            <button id="calNext" type="button" aria-label="下个月">›</button>
+            <button class="text-btn" id="calToday" type="button">本月</button>
+          </div>
+        </div>
+        <div class="calendar" id="calendar"></div>
+        <div class="cal-legend">
+          <span>少</span><i class="lvl-0"></i><i class="lvl-1"></i><i class="lvl-2"></i><i class="lvl-3"></i><i class="lvl-4"></i><span>多</span>
+          <em>颜色越深，当天专注越久</em>
+        </div>
+        <div class="day-detail" id="dayDetail"></div>
+      </div>
+
+      <div class="panel distraction-panel">
+        <div class="panel-head">
+          <h2>分心统计</h2>
+          <span class="panel-note">承认走神，也是一种照顾</span>
+        </div>
+        <div class="dist-cards" id="distCards"></div>
+        <div class="dist-reasons" id="distReasons"></div>
+        <p class="dist-lost" id="distLostLine"></p>
+      </div>
+    </section>
+
+    <!-- ================= 记录 ================= -->
+    <section class="view" id="view-records" aria-label="专注记录">
+      <header class="view-head">
+        <div>
+          <h1 class="view-title">专注记录</h1>
+          <p class="view-sub">每一次坐下来，都被好好记下</p>
+        </div>
+      </header>
+      <div class="records-wrap" id="recordsWrap"></div>
+    </section>
+
+    <!-- ================= 设置 ================= -->
+    <section class="view" id="view-settings" aria-label="设置">
+      <header class="view-head">
+        <div>
+          <h1 class="view-title">设置</h1>
+          <p class="view-sub">把陪伴调成你喜欢的样子</p>
+        </div>
+      </header>
+
+      <div class="settings-stack">
+        <div class="panel settings-panel" id="storageWarn" hidden>
+          <p class="warn-line">当前浏览器禁用了本地存储，数据无法保存。请关闭无痕模式或允许站点存储。</p>
+        </div>
+
+        <section class="panel settings-panel">
+          <div class="panel-head"><h2>计时</h2><span class="panel-note">按自己的节奏来</span></div>
+          <div class="setting-row">
+            <div class="setting-copy"><strong>专注时长</strong><span>1 – 180 分钟</span></div>
+            <div class="setting-control"><input type="number" id="setFocus" min="1" max="180" inputmode="numeric"><span class="unit">分钟</span></div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-copy"><strong>短休息</strong><span>每完成一个番茄后的短休息</span></div>
+            <div class="setting-control"><input type="number" id="setShort" min="1" max="60" inputmode="numeric"><span class="unit">分钟</span></div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-copy"><strong>长休息</strong><span>完成一轮后的长休息</span></div>
+            <div class="setting-control"><input type="number" id="setLong" min="1" max="120" inputmode="numeric"><span class="unit">分钟</span></div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-copy"><strong>长休息间隔</strong><span>完成多少个番茄后进入长休息</span></div>
+            <div class="setting-control"><input type="number" id="setLongEvery" min="2" max="12" inputmode="numeric"><span class="unit">个</span></div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-copy"><strong>自动开始休息</strong><span>专注结束后自动进入休息</span></div>
+            <div class="setting-control"><label class="switch-row"><input type="checkbox" id="setAutoBreak"><span class="switch"></span></label></div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-copy"><strong>自动开始专注</strong><span>休息结束后自动开始下一段</span></div>
+            <div class="setting-control"><label class="switch-row"><input type="checkbox" id="setAutoFocus"><span class="switch"></span></label></div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-copy"><strong>默认计时方式</strong><span>倒计时或正计时</span></div>
+            <div class="setting-control">
+              <div class="segmented" id="setMode">
+                <button type="button" data-mode="down">倒计时</button>
+                <button type="button" data-mode="up">正计时</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel settings-panel">
+          <div class="panel-head"><h2>陪伴人物</h2><span class="panel-note">官方卡面 · 个人自用</span></div>
+          <div class="companion-grid" id="companionGrid" role="radiogroup" aria-label="陪伴人物">
+            <button class="companion-opt" type="button" role="radio" aria-checked="true" data-companion="li-shen-window">
+              <span class="companion-thumb"><img src="./assets/thumb-li-shen-window.jpg" alt="窗边读书的卡面预览" loading="lazy"></span>
+              <span class="companion-meta"><strong>窗边读书</strong><small>静态卡面 · 默认</small></span>
+            </button>
+            <button class="companion-opt" type="button" role="radio" aria-checked="false" data-companion="li-shen-flowers">
+              <span class="companion-thumb"><img src="./assets/thumb-li-shen-flowers.jpg" alt="夜里通话的卡面预览" loading="lazy"></span>
+              <span class="companion-meta"><strong>夜里通话</strong><small>静态卡面</small></span>
+            </button>
+            <button class="companion-opt" type="button" role="radio" aria-checked="false" data-companion="video-wine-1">
+              <span class="companion-thumb is-video"><img src="./assets/thumb-video-wine-1.jpg" alt="微醺其一视频预览" loading="lazy"><span class="companion-badge" aria-hidden="true">▶</span></span>
+              <span class="companion-meta"><strong>微醺 · 其一</strong><small>循环视频</small></span>
+            </button>
+            <button class="companion-opt" type="button" role="radio" aria-checked="false" data-companion="video-wine-2">
+              <span class="companion-thumb is-video"><img src="./assets/thumb-video-wine-2.jpg" alt="微醺其二视频预览" loading="lazy"><span class="companion-badge" aria-hidden="true">▶</span></span>
+              <span class="companion-meta"><strong>微醺 · 其二</strong><small>循环视频</small></span>
+            </button>
+          </div>
+          <p class="hint">素材来自《恋与深空》官方卡面截图，仅限个人自用；若要公开部署，建议用私有方式或删除这些素材。</p>
+        </section>
+
+        <section class="panel settings-panel">
+          <div class="panel-head"><h2>背景音乐</h2><span class="panel-note">循环 · 默认 30%</span></div>
+          <div class="setting-row">
+            <div class="setting-copy"><strong>背景音乐</strong><span>浏览器不允许自动播放，点一次开始或开关后才会响</span></div>
+            <div class="setting-control"><label class="switch-row"><input type="checkbox" id="setMusic"><span class="switch"></span></label></div>
+          </div>
+          <div class="range-row">
+            <span class="range-label">音量</span>
+            <input type="range" id="setMusicVolume" min="0" max="100" value="30">
+            <output id="setMusicVolumeOut">30%</output>
+          </div>
+          <p class="hint" id="musicHint">音乐约 3.9MB，不进离线预缓存；首次播放需联网一次，之后可离线使用。</p>
+        </section>
+
+        <section class="panel settings-panel">
+          <div class="panel-head"><h2>陪伴与提醒</h2><span class="panel-note">克制一点，不打扰</span></div>
+          <div class="setting-row">
+            <div class="setting-copy"><strong>阶段提示音</strong><span>用浏览器合成音，不需要音频文件</span></div>
+            <div class="setting-control"><label class="switch-row"><input type="checkbox" id="setSound"><span class="switch"></span></label></div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-copy"><strong>震动</strong><span>设备支持时，阶段结束轻震一下</span></div>
+            <div class="setting-control"><label class="switch-row"><input type="checkbox" id="setVibrate"><span class="switch"></span></label></div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-copy"><strong>陪伴语音</strong><span>默认关闭；只在阶段开始 / 结束和长时间专注后说话</span></div>
+            <div class="setting-control"><label class="switch-row"><input type="checkbox" id="setVoice"><span class="switch"></span></label></div>
+          </div>
+          <div class="voice-panel" id="voicePanel">
+            <div class="range-row">
+              <span class="range-label">音量</span>
+              <input type="range" id="setVoiceVolume" min="0" max="100" value="80">
+              <output id="setVoiceVolumeOut">80%</output>
+            </div>
+            <div class="range-row">
+              <span class="range-label">语速</span>
+              <input type="range" id="setVoiceRate" min="60" max="140" value="100">
+              <output id="setVoiceRateOut">1.00x</output>
+            </div>
+            <button class="btn soft small" id="testVoiceBtn" type="button">试听一句</button>
+            <p class="hint">语音由浏览器自带的朗读引擎提供，不同设备音色会不一样。</p>
+          </div>
+          <div class="setting-row">
+            <div class="setting-copy"><strong>严格模式</strong><span>开启后禁止暂停、重置与跳过，开关独立保存</span></div>
+            <div class="setting-control"><label class="switch-row"><input type="checkbox" id="setStrict"><span class="switch"></span></label></div>
+          </div>
+        </section>
+
+        <section class="panel settings-panel">
+          <div class="panel-head"><h2>外观</h2><span class="panel-note">温柔一点</span></div>
+          <div class="setting-row">
+            <div class="setting-copy"><strong>主题</strong><span>跟随系统，或手动固定</span></div>
+            <div class="setting-control">
+              <div class="segmented" id="themeSwitch">
+                <button type="button" data-theme-value="auto">跟随系统</button>
+                <button type="button" data-theme-value="light">浅色</button>
+                <button type="button" data-theme-value="dark">深色</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel settings-panel">
+          <div class="panel-head"><h2>安装到桌面</h2><span class="panel-note">像 App 一样全屏使用</span></div>
+          <p class="setting-text">安装后可以全屏打开，页面资源会缓存到本机，断网也能用。安卓 Edge / Chrome / 三星浏览器支持原生安装；iOS Safari 需要手动「添加到主屏幕」。夸克等浏览器一般只能创建网页快捷方式，建议复制链接用 Edge 打开后再安装。</p>
+          <div class="setting-row">
+            <div class="setting-copy"><strong>添加到主屏幕</strong><span>需要 HTTPS 访问（本地 localhost 预览也可以）</span></div>
+            <div class="setting-control"><button class="btn soft small" id="settingsInstallBtn" type="button">查看安装方法</button></div>
+          </div>
+        </section>
+
+        <section class="panel settings-panel">
+          <div class="panel-head"><h2>数据</h2><span class="panel-note">只在本机</span></div>
+          <p class="setting-text">所有任务、专注记录、分心记录都保存在当前浏览器的 localStorage 里，不需要账号，也不会上传任何服务器。</p>
+          <p class="hint" id="storageInfo"></p>
+          <div class="data-actions">
+            <button class="btn soft" id="seedDemoBtn" type="button">载入示例数据（预览统计）</button>
+            <button class="btn danger-ghost" id="clearDataBtn" type="button">清空所有数据</button>
+          </div>
+        </section>
+
+        <p class="settings-foot">计划陪伴 · 本地离线 · 没有账号，也没有排行榜</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="toast-host" id="toastHost" aria-live="polite"></div>
+<div id="modalHost"></div>
+
+<noscript>
+  <p class="noscript">「计划陪伴」需要开启 JavaScript 才能使用。</p>
+</noscript>
+
+<script src="./store.js"></script>
+<script src="./timer.js"></script>
+<script src="./scene.js"></script>
+<script src="./tasks.js"></script>
+<script src="./stats.js"></script>
+<script src="./music.js"></script>
+<script src="./settings.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>

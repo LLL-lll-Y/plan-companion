@@ -1,0 +1,429 @@
+/* ============================================================
+   计划陪伴 · 陪伴场景（真人卡面 / 循环视频）
+   ============================================================ */
+.stage-col { min-width: 0; }
+
+.stage {
+  position: relative;
+  width: 100%;
+  height: clamp(320px, 42vw, 520px);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: #151814;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  isolation: isolate;
+}
+
+.stage-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  touch-action: none;
+  cursor: grab;
+}
+
+.stage-viewport:active { cursor: grabbing; }
+
+.stage-canvas {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+/* ---------- 媒体画面 ---------- */
+.media-scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #151814;
+}
+
+/* 卡面同源的模糊衬底：避免暗色模式下出现突兀白边 */
+.media-blur {
+  position: absolute;
+  inset: -14%;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  filter: blur(30px) saturate(1.06) brightness(.58);
+  transform: scale(1.06);
+  transition: background-image .3s ease;
+}
+
+.media-frame {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  outline: none;
+  --media-gap: 10px;
+}
+
+.media-frame:focus-visible {
+  box-shadow: inset 0 0 0 2px rgba(255, 246, 226, .55);
+}
+
+.media-img,
+.media-video {
+  position: absolute;
+  top: var(--media-gap);
+  left: var(--media-gap);
+  width: calc(100% - var(--media-gap) * 2);
+  height: calc(100% - var(--media-gap) * 2);
+  object-fit: contain;
+  object-position: center;
+  display: block;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  transform-origin: 50% 50%;
+  will-change: transform;
+  background: transparent;
+}
+
+.media-img[hidden],
+.media-video[hidden],
+.media-play[hidden] { display: none !important; }
+
+/* 极缓的呼吸式缩放 + 缓慢视差平移 */
+.media-img {
+  animation: mediaBreathe 46s ease-in-out infinite;
+}
+
+@keyframes mediaBreathe {
+  0%   { transform: scale(1.012) translate3d(-0.5%, 0.35%, 0); }
+  50%  { transform: scale(1.045) translate3d(0.55%, -0.45%, 0); }
+  100% { transform: scale(1.012) translate3d(-0.5%, 0.35%, 0); }
+}
+
+/* 光影与暗角：随专注 / 休息切换 */
+.media-light {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: soft-light;
+  opacity: .92;
+  background: radial-gradient(120% 90% at 28% 10%, rgba(255, 240, 208, .30), transparent 62%);
+  transition: background .9s ease, opacity .9s ease;
+}
+
+.media-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(128% 100% at 50% 46%, transparent 48%, rgba(16, 18, 14, .34) 100%);
+  transition: background .9s ease;
+}
+
+.stage[data-mood="focus"] .media-img { animation-duration: 58s; }
+.stage[data-mood="rest"] .media-img { animation-duration: 34s; }
+.stage[data-mood="done"] .media-img { animation-duration: 40s; }
+
+.stage[data-mood="focus"] .media-light {
+  background: radial-gradient(112% 86% at 50% 18%, rgba(198, 220, 206, .20), transparent 64%);
+  opacity: .82;
+}
+
+.stage[data-mood="focus"] .media-vignette {
+  background: radial-gradient(120% 96% at 50% 48%, transparent 40%, rgba(10, 18, 12, .44) 100%);
+}
+
+.stage[data-mood="rest"] .media-light {
+  background: radial-gradient(124% 92% at 62% 22%, rgba(255, 222, 178, .38), transparent 62%);
+  opacity: 1;
+}
+
+.stage[data-mood="rest"] .media-vignette {
+  background: radial-gradient(132% 104% at 50% 44%, transparent 52%, rgba(16, 18, 14, .24) 100%);
+}
+
+.stage[data-mood="done"] .media-light {
+  background: radial-gradient(120% 90% at 50% 26%, rgba(255, 232, 190, .34), transparent 64%);
+}
+
+/* 轻点 / 长按的温柔反馈 */
+.media-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(closest-side at 50% 52%, rgba(255, 238, 210, .38), transparent 72%);
+}
+
+.media-frame.is-touch .media-glow {
+  animation: mediaTouch 1.5s ease-out;
+}
+
+@keyframes mediaTouch {
+  0%   { opacity: .9; transform: scale(.94); }
+  100% { opacity: 0; transform: scale(1.05); }
+}
+
+.media-frame.is-pressing .media-img,
+.media-frame.is-pressing .media-video {
+  filter: brightness(1.04) saturate(1.02);
+}
+
+.media-play {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 4;
+  transform: translate(-50%, -50%);
+  padding: 10px 18px;
+  border: 1px solid rgba(255, 255, 255, .28);
+  border-radius: 999px;
+  background: rgba(24, 26, 22, .56);
+  color: #f6f1e4;
+  font-size: 12.5px;
+  letter-spacing: .4px;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .28);
+}
+
+.media-play:active { transform: translate(-50%, -50%) scale(.96); }
+
+.stage-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(120% 80% at 50% 0%, rgba(255, 250, 236, .10), transparent 58%);
+}
+
+html[data-theme="dark"] .stage-overlay {
+  background: radial-gradient(120% 80% at 50% 0%, rgba(255, 244, 220, .05), transparent 60%);
+}
+
+/* 暗色：压一点亮度，让卡面与深色界面融合 */
+html[data-theme="dark"] .media-img,
+html[data-theme="dark"] .media-video {
+  filter: brightness(.94) saturate(.97);
+}
+
+html[data-theme="dark"] .media-blur {
+  filter: blur(32px) saturate(1.02) brightness(.42);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .media-img { animation: none; }
+  .media-frame.is-touch .media-glow { animation: none; opacity: 0; }
+}
+
+/* ---------- 舞台上的信息层 ---------- */
+.stage-top {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  pointer-events: none;
+}
+
+.stage-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: rgba(255, 251, 242, .82);
+  border: 1px solid rgba(255, 255, 255, .5);
+  color: #5a5348;
+  font-size: 11.5px;
+  letter-spacing: .4px;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 10px rgba(90, 76, 58, .08);
+  transition: opacity .4s ease;
+}
+
+html[data-theme="dark"] .stage-chip {
+  background: rgba(38, 42, 35, .76);
+  border-color: rgba(255, 255, 255, .08);
+  color: #cfc8b8;
+}
+
+.stage-chip.subtle { opacity: .78; font-size: 10.5px; }
+
+.stage-chip.is-dim { opacity: 0; }
+
+.stage-caption {
+  position: absolute;
+  left: 14px;
+  bottom: 12px;
+  z-index: 5;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 251, 242, .6);
+  color: #6c6354;
+  font-size: 11px;
+  letter-spacing: .3px;
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+html[data-theme="dark"] .stage-caption {
+  background: rgba(32, 36, 30, .6);
+  color: #a9a293;
+}
+
+.zoom-controls {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.zoom-controls button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: rgba(255, 252, 245, .84);
+  color: #5a5348;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(80, 68, 50, .1);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  transition: background .16s ease, transform .12s ease;
+}
+
+.zoom-controls button:hover { background: #fffdf7; }
+
+.zoom-controls button:active { transform: scale(.94); }
+
+html[data-theme="dark"] .zoom-controls button {
+  background: rgba(40, 44, 37, .84);
+  color: #d4cdbd;
+}
+
+html[data-theme="dark"] .zoom-controls button:hover { background: rgba(50, 55, 46, .95); }
+
+.stage-bubble {
+  position: absolute;
+  left: 50%;
+  bottom: 52px;
+  z-index: 7;
+  max-width: min(78%, 420px);
+  padding: 10px 16px;
+  border-radius: 16px 16px 16px 5px;
+  background: rgba(255, 252, 245, .95);
+  color: #4c463c;
+  font-size: 13.5px;
+  line-height: 1.65;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(70, 58, 42, .16);
+  transform: translate(-50%, 8px);
+  opacity: 0;
+  transition: opacity .28s ease, transform .28s ease;
+  pointer-events: none;
+}
+
+.stage-bubble.is-show { opacity: 1; transform: translate(-50%, 0); }
+
+html[data-theme="dark"] .stage-bubble {
+  background: rgba(45, 50, 41, .96);
+  color: #e4decf;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, .45);
+}
+
+.stage-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 4px 0;
+}
+
+.stage-line {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.stage-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* 不抢眼的小喇叭 */
+.music-btn {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color .18s ease, background .18s ease, opacity .18s ease;
+}
+
+.music-btn:hover {
+  background: var(--panel-2);
+  color: var(--ink);
+}
+
+.music-btn svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.music-btn svg .spk {
+  fill: currentColor;
+  stroke: none;
+  opacity: .9;
+}
+
+.music-btn svg .slash { display: none; }
+.music-btn.is-off .wave { display: none; }
+.music-btn.is-off .slash { display: block; }
+.music-btn.is-off { opacity: .72; }
+.music-btn.is-pending .wave { opacity: .3; }
+
+.music-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 900px) {
+  .stage { height: clamp(300px, 52vw, 480px); }
+}
+
+@media (max-width: 620px) {
+  .stage { height: clamp(250px, 44vh, 360px); border-radius: 20px; }
+  .stage-chip.subtle { display: none; }
+  .stage-caption { font-size: 10.5px; }
+  .stage-bubble { bottom: 46px; max-width: 84%; font-size: 13px; padding: 9px 14px; }
+  .stage-foot { padding-top: 9px; }
+  .stage-line { font-size: 12px; }
+}
+
+@media (max-width: 400px) {
+  .stage { height: clamp(230px, 40vh, 320px); }
+}
